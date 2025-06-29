@@ -30,7 +30,7 @@ app.post("/send-otp", async (req, res) => {
       secure: true,
       auth: {
         user: "pritha18@cse.pstu.ac.bd",
-        pass: "prithamoni42170", // Please keep this secret and consider using environment variables
+        pass: "xsvk lzsy ofgy njnm ", // Please keep this secret and consider using environment variables
       },
     });
 
