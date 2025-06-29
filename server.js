@@ -29,8 +29,8 @@ app.post("/send-otp", async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-    user: process.env.EMAIL_USER,  // from environment
-    pass: process.env.EMAIL_PASS, // Please keep this secret and consider using environment variables
+        user: "pritha18@cse.pstu.ac.bd",
+        pass: "prithamoni42170", // Please keep this secret and consider using environment variables
       },
     });
 
