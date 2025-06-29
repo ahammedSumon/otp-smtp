@@ -1,23 +1,14 @@
 {
-  "name": "email-otp-server",
+  "name": "otp-server",
   "version": "1.0.0",
-  "description": "Node.js server to send and verify OTP via email",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [
-    "otp",
-    "nodejs",
-    "express",
-    "email",
-    "nodemailer"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "nodemailer": "^6.9.8"
-  }
+    "nodemailer": "^6.9.3"
+  },
+  "type": "module"
 }
