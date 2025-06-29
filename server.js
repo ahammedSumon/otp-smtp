@@ -35,13 +35,13 @@ app.post("/send-otp", async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"MediCampus" <maksudor18@cse.pstu.ac.bd>`,
+      from: `"Food Delivary" <pritha18@cse.pstu.ac.bd>`,
       to: email,
       subject: "Your OTP Code",
       html: `
         <div style="font-family: Arial, sans-serif; font-size: 16px;">
           <h2>Your OTP Code</h2>
-          <p>Please use the following OTP to complete your sign up process:</p>
+          <p>Please use the following OTP to varify your sign up process:</p>
           <div style="font-size: 24px; font-weight: bold; margin: 20px 0;">${otp}</div>
           <p>This code will expire in 10 minutes.</p>
         </div>
