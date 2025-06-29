@@ -4,7 +4,20 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
+
+// Add this middleware to log request headers and body for debugging
+app.use((req, res, next) => {
+  console.log('--- Incoming Request ---');
+  console.log('URL:', req.url);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
+});
+
 app.use(express.json());
+
+// In case some clients send urlencoded forms, also parse that (optional)
+app.use(express.urlencoded({ extended: true }));
 
 const otps = new Map(); // Stores { email: { otp, expiresAt } }
 
@@ -12,7 +25,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,  // from environment
-    pass: process.env.EMAIL_PASS             // Use an "App Password" if 2FA enabled
+    pass: process.env.EMAIL_PASS   // Use an "App Password" if 2FA enabled
   },
 });
 
@@ -20,7 +33,9 @@ const transporter = nodemailer.createTransport({
 app.post('/send-otp', async (req, res) => {
   const { email } = req.body;
 
-  if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email is required" });
+  }
 
   const otp = Math.floor(100000 + Math.random() * 900000);
   const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
@@ -29,15 +44,16 @@ app.post('/send-otp', async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: '"OTP Service" <your-email@gmail.com>',
+      from: `"OTP Service" <${process.env.EMAIL_USER}>`,  // dynamic sender email
       to: email,
       subject: "Your OTP Code",
       text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
     });
 
+    console.log(`OTP ${otp} sent to ${email}`);
     res.json({ success: true, message: "OTP sent" });
   } catch (error) {
-    console.error(error);
+    console.error('Failed to send email:', error);
     res.status(500).json({ success: false, message: "Failed to send email" });
   }
 });
