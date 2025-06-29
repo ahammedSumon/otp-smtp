@@ -11,8 +11,8 @@ const otps = new Map(); // Stores { email: { otp, expiresAt } }
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'your-email@gmail.com',         // Replace with your Gmail
-    pass: 'your-app-password'             // Use an "App Password" if 2FA enabled
+    user: process.env.EMAIL_USER,  // from environment
+    pass: process.env.EMAIL_PASS             // Use an "App Password" if 2FA enabled
   },
 });
 
