@@ -1,89 +1,61 @@
-const express = require('express');
-const nodemailer = require('nodemailer');
-const cors = require('cors');
+import express from "express";
+import cors from "cors";
+import nodemailer from "nodemailer";
 
 const app = express();
+
+// Enable CORS for all origins
 app.use(cors());
 
-// Add this middleware to log request headers and body for debugging
+// Parse JSON bodies
+app.use(express.json());
+
+// Simple request logger (optional)
 app.use((req, res, next) => {
-  console.log('--- Incoming Request ---');
-  console.log('URL:', req.url);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 
-app.use(express.json());
-
-// In case some clients send urlencoded forms, also parse that (optional)
-app.use(express.urlencoded({ extended: true }));
-
-const otps = new Map(); // Stores { email: { otp, expiresAt } }
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,  // from environment
-    pass: process.env.EMAIL_PASS   // Use an "App Password" if 2FA enabled
-  },
-});
-
-// Send OTP
-app.post('/send-otp', async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ success: false, message: "Email is required" });
-  }
-
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-  otps.set(email, { otp, expiresAt });
-
-  try {
-    await transporter.sendMail({
-      from: `"OTP Service" <${process.env.EMAIL_USER}>`,  // dynamic sender email
-      to: email,
-      subject: "Your OTP Code",
-      text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
-    });
-
-    console.log(`OTP ${otp} sent to ${email}`);
-    res.json({ success: true, message: "OTP sent" });
-  } catch (error) {
-    console.error('Failed to send email:', error);
-    res.status(500).json({ success: false, message: "Failed to send email" });
-  }
-});
-
-// Verify OTP
-app.post('/verify-otp', (req, res) => {
+app.post("/send-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
-    return res.status(400).json({ success: false, message: "Email and OTP are required" });
+    return res.status(400).json({ message: "Email and OTP required" });
   }
 
-  const record = otps.get(email);
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+    user: process.env.EMAIL_USER,  // from environment
+    pass: process.env.EMAIL_PASS, // Please keep this secret and consider using environment variables
+      },
+    });
 
-  if (!record) {
-    return res.status(400).json({ success: false, message: "No OTP found for this email" });
+    await transporter.sendMail({
+      from: `"MediCampus" <maksudor18@cse.pstu.ac.bd>`,
+      to: email,
+      subject: "Your OTP Code",
+      html: `
+        <div style="font-family: Arial, sans-serif; font-size: 16px;">
+          <h2>Your OTP Code</h2>
+          <p>Please use the following OTP to complete your sign up process:</p>
+          <div style="font-size: 24px; font-weight: bold; margin: 20px 0;">${otp}</div>
+          <p>This code will expire in 10 minutes.</p>
+        </div>
+      `,
+    });
+
+    return res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return res.status(500).json({ message: "Failed to send OTP" });
   }
-
-  if (Date.now() > record.expiresAt) {
-    otps.delete(email);
-    return res.status(400).json({ success: false, message: "OTP expired" });
-  }
-
-  if (record.otp.toString() !== otp.toString()) {
-    return res.status(400).json({ success: false, message: "Invalid OTP" });
-  }
-
-  otps.delete(email);
-  res.json({ success: true, message: "OTP verified successfully" });
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
